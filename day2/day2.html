@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advent of Code 2025 - Day 2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #f5576c;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .gift-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        .gift-box {
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 10px;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .gift-ribbon-h {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: #ffd700;
+            transform: translateY(-50%);
+        }
+
+        .gift-ribbon-v {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 20px;
+            background: #ffd700;
+            transform: translateX(-50%);
+        }
+
+        .gift-bow {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 3em;
+        }
+
+        .result {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .result-label {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .result-value {
+            font-size: 4em;
+            font-weight: bold;
+            word-break: break-all;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f5f7fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #f5576c;
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        button {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .examples {
+            background: #f5f7fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 0.9em;
+        }
+
+        .examples h3 {
+            color: #f5576c;
+            margin-bottom: 10px;
+        }
+
+        .example-item {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        .valid {
+            color: #22c55e;
+            font-weight: bold;
+        }
+
+        .invalid {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: #f5f7fa;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            color: #666;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎁 Day 2: Gift Shop</h1>
+        <p class="subtitle">Invalid Product ID Detector</p>
+
+        <div class="gift-container">
+            <div class="gift-box">
+                <div class="gift-ribbon-h"></div>
+                <div class="gift-ribbon-v"></div>
+                <div class="gift-bow">🎀</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchPart(1)">⭐ Part 1</button>
+            <button class="tab" onclick="switchPart(2)">⭐ Part 2</button>
+        </div>
+
+        <div class="examples" id="examples1">
+            <h3>Part 1 - Invalid ID Examples:</h3>
+            <div class="example-item"><span class="invalid">11</span> = "1" repeated exactly 2 times</div>
+            <div class="example-item"><span class="invalid">6464</span> = "64" repeated exactly 2 times</div>
+            <div class="example-item"><span class="invalid">123123</span> = "123" repeated exactly 2 times</div>
+            <div class="example-item"><span class="valid">101</span> = not a repeated pattern</div>
+        </div>
+
+        <div class="examples" id="examples2" style="display: none;">
+            <h3>Part 2 - Invalid ID Examples:</h3>
+            <div class="example-item"><span class="invalid">12341234</span> = "1234" repeated 2 times</div>
+            <div class="example-item"><span class="invalid">123123123</span> = "123" repeated 3 times</div>
+            <div class="example-item"><span class="invalid">1212121212</span> = "12" repeated 5 times</div>
+            <div class="example-item"><span class="invalid">1111111</span> = "1" repeated 7 times</div>
+        </div>
+
+        <div class="result">
+            <div class="result-label" id="resultLabel">Sum of Invalid IDs (Part 1)</div>
+            <div class="result-value" id="totalSum">?</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Invalid IDs Found</div>
+                <div class="stat-value" id="invalidCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Ranges Checked</div>
+                <div class="stat-value" id="rangeCount">0</div>
+            </div>
+        </div>
+
+        <button onclick="solvePuzzle()">🎁 Find Invalid IDs</button>
+    </div>
+
+    <script>
+        let currentPart = 1;
+        let cachedInput = null;
+
+        async function loadInput() {
+            if (cachedInput) return cachedInput;
+            try {
+                const response = await fetch('day2_input.txt');
+                const text = await response.text();
+                cachedInput = text.trim();
+                return cachedInput;
+            } catch (error) {
+                console.error('Error loading input:', error);
+                alert('Error loading day2_input.txt. Make sure the file exists in the same directory.');
+                return '';
+            }
+        }
+
+        function isInvalidIDPart1(num) {
+            const str = num.toString();
+            
+            // Must have even length
+            if (str.length % 2 !== 0) {
+                return false;
+            }
+            
+            // Split in half and compare (exactly 2 repetitions)
+            const half = str.length / 2;
+            const leftHalf = str.substring(0, half);
+            const rightHalf = str.substring(half);
+            
+            return leftHalf === rightHalf;
+        }
+
+        function isInvalidIDPart2(num) {
+            const str = num.toString();
+            const len = str.length;
+            
+            // Try all possible pattern lengths (at least 2 repetitions)
+            for (let patternLen = 1; patternLen <= Math.floor(len / 2); patternLen++) {
+                // Check if length is divisible by pattern length and at least 2 repetitions
+                if (len % patternLen === 0 && len / patternLen >= 2) {
+                    const pattern = str.substring(0, patternLen);
+                    const repetitions = len / patternLen;
+                    
+                    // Check if entire string is this pattern repeated
+                    let isRepeated = true;
+                    for (let i = 1; i < repetitions; i++) {
+                        if (str.substring(i * patternLen, (i + 1) * patternLen) !== pattern) {
+                            isRepeated = false;
+                            break;
+                        }
+                    }
+                    
+                    if (isRepeated) {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        }
+
+        function solveGiftShop(input, part) {
+            const ranges = input.split(',').map(r => r.trim()).filter(r => r);
+            let totalSum = 0;
+            let invalidCount = 0;
+            const checkFunc = part === 1 ? isInvalidIDPart1 : isInvalidIDPart2;
+            
+            ranges.forEach(range => {
+                const [start, end] = range.split('-').map(Number);
+                
+                for (let num = start; num <= end; num++) {
+                    if (checkFunc(num)) {
+                        totalSum += num;
+                        invalidCount++;
+                    }
+                }
+            });
+            
+            return {
+                totalSum,
+                invalidCount,
+                rangeCount: ranges.length
+            };
+        }
+
+        function switchPart(part) {
+            currentPart = part;
+            
+            // Update tabs
+            document.querySelectorAll('.tab').forEach((tab, idx) => {
+                if (idx + 1 === part) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // Update examples
+            document.getElementById('examples1').style.display = part === 1 ? 'block' : 'none';
+            document.getElementById('examples2').style.display = part === 2 ? 'block' : 'none';
+            
+            // Update label
+            document.getElementById('resultLabel').textContent = `Sum of Invalid IDs (Part ${part})`;
+            
+            // Re-solve with new part
+            solvePuzzle();
+        }
+
+        async function solvePuzzle() {
+            const button = document.querySelector('button[onclick="solvePuzzle()"]');
+            button.disabled = true;
+            button.textContent = '🔄 Solving...';
+
+            const input = await loadInput();
+            
+            if (!input) {
+                button.disabled = false;
+                button.textContent = '🎁 Find Invalid IDs';
+                return;
+            }
+
+            const result = solveGiftShop(input, currentPart);
+
+            // Display the result
+            document.getElementById('totalSum').textContent = result.totalSum.toLocaleString();
+            document.getElementById('invalidCount').textContent = result.invalidCount.toLocaleString();
+            document.getElementById('rangeCount').textContent = result.rangeCount;
+
+            button.disabled = false;
+            button.textContent = '✅ Solved!';
+            setTimeout(() => {
+                button.textContent = '🎁 Solve Again';
+            }, 2000);
+        }
+
+        // Auto-solve on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(solvePuzzle, 500);
+        });
+    </script>
+</body>
+</html>
