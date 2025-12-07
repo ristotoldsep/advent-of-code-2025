@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advent of Code 2025 - Day 1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .dial-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        .dial {
+            width: 200px;
+            height: 200px;
+            border: 8px solid #667eea;
+            border-radius: 50%;
+            position: relative;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .dial-number {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .dial-arrow {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid #764ba2;
+        }
+
+        .result {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .result-label {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .result-value {
+            font-size: 4em;
+            font-weight: bold;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f5f7fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #667eea;
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎄 Day 1: Secret Entrance</h1>
+        <p class="subtitle">Safe Dial Decoder</p>
+
+        <div class="dial-container">
+            <div class="dial">
+                <div class="dial-arrow"></div>
+                <div class="dial-number" id="dialNumber">50</div>
+            </div>
+        </div>
+
+        <div class="result">
+            <div class="result-label">Password (zeros counted)</div>
+            <div class="result-value" id="password">?</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Total Rotations</div>
+                <div class="stat-value" id="totalRotations">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Final Position</div>
+                <div class="stat-value" id="finalPosition">50</div>
+            </div>
+        </div>
+
+        <button onclick="solvePuzzle()">🔓 Solve Puzzle</button>
+    </div>
+
+    <script>
+        async function loadInput() {
+            try {
+                const response = await fetch('day1_input.txt');
+                const text = await response.text();
+                return text.trim().split('\n');
+            } catch (error) {
+                console.error('Error loading input:', error);
+                alert('Error loading day1_input.txt. Make sure the file exists in the same directory.');
+                return [];
+            }
+        }
+
+        function solveDialPuzzle(rotations) {
+            let position = 50;
+            let zeroCount = 0;
+
+            rotations.forEach((rotation, index) => {
+                const direction = rotation[0];
+                const distance = parseInt(rotation.substring(1));
+
+                if (direction === 'L') {
+                    position = (position - distance) % 100;
+                    if (position < 0) position += 100;
+                } else if (direction === 'R') {
+                    position = (position + distance) % 100;
+                }
+
+                if (position === 0) {
+                    zeroCount++;
+                }
+            });
+
+            return {
+                password: zeroCount,
+                finalPosition: position,
+                totalRotations: rotations.length
+            };
+        }
+
+        async function solvePuzzle() {
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = '🔄 Solving...';
+
+            const rotations = await loadInput();
+            
+            if (rotations.length === 0) {
+                button.disabled = false;
+                button.textContent = '🔓 Solve Puzzle';
+                return;
+            }
+
+            const result = solveDialPuzzle(rotations);
+
+            // Display the result
+            document.getElementById('password').textContent = result.password;
+            document.getElementById('totalRotations').textContent = result.totalRotations;
+            document.getElementById('finalPosition').textContent = result.finalPosition;
+            document.getElementById('dialNumber').textContent = result.finalPosition;
+
+            button.disabled = false;
+            button.textContent = '✅ Solved!';
+            setTimeout(() => {
+                button.textContent = '🔓 Solve Again';
+            }, 2000);
+        }
+
+        // Auto-solve on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(solvePuzzle, 500);
+        });
+    </script>
+</body>
+</html>
