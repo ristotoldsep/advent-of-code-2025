@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advent of Code 2025 - Day 4</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #ea580c;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .forklift-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        .forklift {
+            font-size: 5em;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .result {
+            background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .result-label {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .result-value {
+            font-size: 4em;
+            font-weight: bold;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            line-height: 1.2;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f5f7fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #ea580c;
+            font-size: 1.8em;
+            font-weight: bold;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        button {
+            background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .examples {
+            background: #f5f7fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 0.9em;
+        }
+
+        .examples h3 {
+            color: #ea580c;
+            margin-bottom: 10px;
+        }
+
+        .example-item {
+            margin: 8px 0;
+            color: #666;
+            font-family: 'Courier New', monospace;
+        }
+
+        .highlight {
+            color: #ea580c;
+            font-weight: bold;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: #f5f7fa;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            color: #666;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏗️ Day 4: Printing Department</h1>
+        <p class="subtitle">Forklift Accessibility Calculator</p>
+
+        <div class="forklift-container">
+            <div class="forklift">🚜</div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchPart(1)">⭐ Part 1</button>
+            <button class="tab" onclick="switchPart(2)">⭐ Part 2</button>
+        </div>
+
+        <div class="examples" id="examples1">
+            <h3>Part 1 - Count Accessible:</h3>
+            <div class="example-item">Paper rolls (<span class="highlight">@</span>) on a grid</div>
+            <div class="example-item">Forklift can access roll if it has <span class="highlight">&lt; 4</span> neighbors</div>
+            <div class="example-item"></div>
+            <div class="example-item">Check all 8 adjacent positions:</div>
+            <div class="example-item">N, S, E, W, NE, NW, SE, SW</div>
+            <div class="example-item"></div>
+            <div class="example-item">Example: @ with 3 neighbors → <span class="highlight">accessible ✓</span></div>
+            <div class="example-item">Example: @ with 4+ neighbors → <span class="highlight">blocked ✗</span></div>
+        </div>
+
+        <div class="examples" id="examples2" style="display: none;">
+            <h3>Part 2 - Iterative Removal:</h3>
+            <div class="example-item">Remove all accessible rolls (<span class="highlight">&lt; 4</span> neighbors)</div>
+            <div class="example-item">After removal, more rolls may become accessible</div>
+            <div class="example-item"></div>
+            <div class="example-item">Repeat until no more accessible rolls</div>
+            <div class="example-item"></div>
+            <div class="example-item">Example: Start with 50 rolls</div>
+            <div class="example-item">→ Round 1: Remove 13 accessible</div>
+            <div class="example-item">→ Round 2: Remove 12 accessible</div>
+            <div class="example-item">→ Continue... Total: <span class="highlight">43 removed</span></div>
+        </div>
+
+        <div class="result">
+            <div class="result-label" id="resultLabel">Accessible Paper Rolls (Part 1)</div>
+            <div class="result-value" id="accessibleCount">?</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label" id="stat1Label">Total Rolls</div>
+                <div class="stat-value" id="stat1Value">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label" id="stat2Label">Blocked Rolls</div>
+                <div class="stat-value" id="stat2Value">-</div>
+            </div>
+        </div>
+
+        <button onclick="solvePuzzle()">🚜 Calculate Access</button>
+    </div>
+
+    <script>
+        let currentPart = 1;
+
+        async function loadInput() {
+            try {
+                const response = await fetch('day4_input.txt');
+                const text = await response.text();
+                return text.trim().split('\n').filter(line => line.trim());
+            } catch (error) {
+                console.error('Error loading input:', error);
+                alert('Error loading input file. Make sure day4_input.txt is in the same folder.');
+                return null;
+            }
+        }
+
+        function countAccessibleRolls(grid) {
+            const rows = grid.length;
+            const cols = grid[0].length;
+            let accessibleCount = 0;
+            let totalRolls = 0;
+            
+            // Direction vectors for 8 neighbors: N, S, E, W, NE, NW, SE, SW
+            const directions = [
+                [-1, 0],  // N
+                [1, 0],   // S
+                [0, 1],   // E
+                [0, -1],  // W
+                [-1, 1],  // NE
+                [-1, -1], // NW
+                [1, 1],   // SE
+                [1, -1]   // SW
+            ];
+            
+            // For each cell in the grid
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    // If it's a paper roll
+                    if (grid[row][col] === '@') {
+                        totalRolls++;
+                        
+                        // Count neighbors that are also paper rolls
+                        let neighborCount = 0;
+                        
+                        for (const [dr, dc] of directions) {
+                            const newRow = row + dr;
+                            const newCol = col + dc;
+                            
+                            // Check bounds
+                            if (newRow >= 0 && newRow < rows && 
+                                newCol >= 0 && newCol < cols) {
+                                // Check if neighbor is a paper roll
+                                if (grid[newRow][newCol] === '@') {
+                                    neighborCount++;
+                                }
+                            }
+                        }
+                        
+                        // Accessible if fewer than 4 neighbors
+                        if (neighborCount < 4) {
+                            accessibleCount++;
+                        }
+                    }
+                }
+            }
+            
+            return {
+                accessibleCount: accessibleCount,
+                totalRolls: totalRolls,
+                blockedRolls: totalRolls - accessibleCount
+            };
+        }
+
+        function removeAccessibleRolls(grid) {
+            // Part 2: Iteratively remove accessible rolls until none remain
+            let gridCopy = grid.map(row => row.split(''));
+            let totalRemoved = 0;
+            const originalTotal = gridCopy.flat().filter(c => c === '@').length;
+            let rounds = 0;
+            
+            const directions = [
+                [-1, 0], [1, 0], [0, 1], [0, -1],
+                [-1, 1], [-1, -1], [1, 1], [1, -1]
+            ];
+            
+            while (true) {
+                const rows = gridCopy.length;
+                const cols = gridCopy[0].length;
+                const toRemove = [];
+                
+                // Find all accessible rolls in current state
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        if (gridCopy[row][col] === '@') {
+                            let neighborCount = 0;
+                            
+                            for (const [dr, dc] of directions) {
+                                const newRow = row + dr;
+                                const newCol = col + dc;
+                                
+                                if (newRow >= 0 && newRow < rows && 
+                                    newCol >= 0 && newCol < cols) {
+                                    if (gridCopy[newRow][newCol] === '@') {
+                                        neighborCount++;
+                                    }
+                                }
+                            }
+                            
+                            // Accessible if fewer than 4 neighbors
+                            if (neighborCount < 4) {
+                                toRemove.push([row, col]);
+                            }
+                        }
+                    }
+                }
+                
+                // If no accessible rolls found, stop
+                if (toRemove.length === 0) {
+                    break;
+                }
+                
+                // Remove all accessible rolls
+                for (const [row, col] of toRemove) {
+                    gridCopy[row][col] = '.';
+                }
+                
+                totalRemoved += toRemove.length;
+                rounds++;
+            }
+            
+            return {
+                totalRemoved: totalRemoved,
+                originalTotal: originalTotal,
+                rounds: rounds
+            };
+        }
+
+        function switchPart(part) {
+            currentPart = part;
+            
+            // Update tabs
+            document.querySelectorAll('.tab').forEach((tab, idx) => {
+                if (idx + 1 === part) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // Update examples
+            document.getElementById('examples1').style.display = part === 1 ? 'block' : 'none';
+            document.getElementById('examples2').style.display = part === 2 ? 'block' : 'none';
+            
+            // Update labels
+            if (part === 1) {
+                document.getElementById('resultLabel').textContent = 'Accessible Paper Rolls (Part 1)';
+                document.getElementById('stat1Label').textContent = 'Total Rolls';
+                document.getElementById('stat2Label').textContent = 'Blocked Rolls';
+            } else {
+                document.getElementById('resultLabel').textContent = 'Total Removed Rolls (Part 2)';
+                document.getElementById('stat1Label').textContent = 'Original Total';
+                document.getElementById('stat2Label').textContent = 'Removal Rounds';
+            }
+            
+            // Re-solve with new part
+            solvePuzzle();
+        }
+
+        async function solvePuzzle() {
+            const button = document.querySelector('button');
+            button.disabled = true;
+            button.textContent = '🔄 Calculating...';
+
+            const grid = await loadInput();
+            
+            if (!grid) {
+                button.disabled = false;
+                button.textContent = '🚜 Calculate Access';
+                return;
+            }
+
+            let result;
+            if (currentPart === 1) {
+                result = countAccessibleRolls(grid);
+                document.getElementById('accessibleCount').textContent = result.accessibleCount;
+                document.getElementById('stat1Value').textContent = result.totalRolls;
+                document.getElementById('stat2Value').textContent = result.blockedRolls;
+            } else {
+                result = removeAccessibleRolls(grid);
+                document.getElementById('accessibleCount').textContent = result.totalRemoved;
+                document.getElementById('stat1Value').textContent = result.originalTotal;
+                document.getElementById('stat2Value').textContent = result.rounds;
+            }
+
+            button.disabled = false;
+            button.textContent = '✅ Solved!';
+            setTimeout(() => {
+                button.textContent = '🚜 Calculate Again';
+            }, 2000);
+        }
+
+        // Auto-solve on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(solvePuzzle, 500);
+        });
+    </script>
+</body>
+</html>
