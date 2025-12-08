@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advent of Code 2025 - Day 5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #047857;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .cafeteria-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            gap: 10px;
+        }
+
+        .ingredient {
+            font-size: 3em;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .ingredient:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .ingredient:nth-child(3) {
+            animation-delay: 1s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .result {
+            background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .result-label {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .result-value {
+            font-size: 4em;
+            font-weight: bold;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            line-height: 1.2;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f5f7fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #047857;
+            font-size: 1.8em;
+            font-weight: bold;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        button {
+            background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .examples {
+            background: #f5f7fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 0.9em;
+        }
+
+        .examples h3 {
+            color: #047857;
+            margin-bottom: 10px;
+        }
+
+        .example-item {
+            margin: 8px 0;
+            color: #666;
+            font-family: 'Courier New', monospace;
+        }
+
+        .highlight {
+            color: #047857;
+            font-weight: bold;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: #f5f7fa;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            color: #666;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍽️ Day 5: Cafeteria</h1>
+        <p class="subtitle">Fresh Ingredient Checker</p>
+
+        <div class="cafeteria-container">
+            <div class="ingredient">🥕</div>
+            <div class="ingredient">🥦</div>
+            <div class="ingredient">🍅</div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchPart(1)">⭐ Part 1</button>
+            <button class="tab" onclick="switchPart(2)">⭐ Part 2</button>
+        </div>
+
+        <div class="examples" id="examples1">
+            <h3>Part 1 - Check Available IDs:</h3>
+            <div class="example-item">Fresh ranges: <span class="highlight">3-5, 10-14</span></div>
+            <div class="example-item">Available IDs: 1, 5, 8, 11, 17, 32</div>
+            <div class="example-item"></div>
+            <div class="example-item">ID <span class="highlight">5</span> → in range 3-5 → Fresh ✓</div>
+            <div class="example-item">ID <span class="highlight">11</span> → in range 10-14 → Fresh ✓</div>
+            <div class="example-item">ID <span class="highlight">1</span> → not in any range → Spoiled ✗</div>
+            <div class="example-item"></div>
+            <div class="example-item">Result: <span class="highlight">3 fresh</span> out of 6 available</div>
+        </div>
+
+        <div class="examples" id="examples2" style="display: none;">
+            <h3>Part 2 - Count All Fresh IDs:</h3>
+            <div class="example-item">Fresh ranges: <span class="highlight">3-5, 10-14, 16-20, 12-18</span></div>
+            <div class="example-item"></div>
+            <div class="example-item">3-5 covers: 3, 4, 5 (<span class="highlight">3 IDs</span>)</div>
+            <div class="example-item">10-14 covers: 10, 11, 12, 13, 14</div>
+            <div class="example-item">12-18 covers: 12, 13, 14, 15, 16, 17, 18</div>
+            <div class="example-item">16-20 covers: 16, 17, 18, 19, 20</div>
+            <div class="example-item"></div>
+            <div class="example-item">Merged: 3-5, 10-20 → <span class="highlight">14 total IDs</span></div>
+        </div>
+
+        <div class="result">
+            <div class="result-label" id="resultLabel">Fresh Ingredients (Part 1)</div>
+            <div class="result-value" id="freshCount">?</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label" id="stat1Label">Total Available</div>
+                <div class="stat-value" id="stat1Value">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label" id="stat2Label">Spoiled</div>
+                <div class="stat-value" id="stat2Value">-</div>
+            </div>
+        </div>
+
+        <button onclick="solvePuzzle()">🥗 Check Freshness</button>
+    </div>
+
+    <script>
+        let currentPart = 1;
+
+        async function loadInput() {
+            try {
+                const response = await fetch('day5_input.txt');
+                const text = await response.text();
+                return text.trim();
+            } catch (error) {
+                console.error('Error loading input:', error);
+                alert('Error loading input file. Make sure day5_input.txt is in the same folder.');
+                return null;
+            }
+        }
+
+        function parseInput(input) {
+            const lines = input.split('\n');
+            const ranges = [];
+            const availableIds = [];
+            let parsingRanges = true;
+            
+            for (const line of lines) {
+                const trimmed = line.trim();
+                
+                // Empty line separates ranges from IDs
+                if (trimmed === '') {
+                    parsingRanges = false;
+                    continue;
+                }
+                
+                if (parsingRanges) {
+                    // Parse range: "start-end"
+                    const [start, end] = trimmed.split('-').map(Number);
+                    ranges.push({ start, end });
+                } else {
+                    // Parse available ID
+                    availableIds.push(Number(trimmed));
+                }
+            }
+            
+            return { ranges, availableIds };
+        }
+
+        function isFresh(id, ranges) {
+            // Check if ID falls in any range
+            for (const range of ranges) {
+                if (id >= range.start && id <= range.end) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function countFreshIngredients(ranges, availableIds) {
+            let freshCount = 0;
+            
+            for (const id of availableIds) {
+                if (isFresh(id, ranges)) {
+                    freshCount++;
+                }
+            }
+            
+            return {
+                freshCount: freshCount,
+                totalAvailable: availableIds.length,
+                spoiledCount: availableIds.length - freshCount
+            };
+        }
+
+        function mergeRanges(ranges) {
+            // Sort ranges by start position
+            const sorted = [...ranges].sort((a, b) => a.start - b.start);
+            const merged = [];
+            
+            for (const range of sorted) {
+                if (merged.length === 0) {
+                    merged.push({ start: range.start, end: range.end });
+                } else {
+                    const last = merged[merged.length - 1];
+                    
+                    // Check if current range overlaps or is adjacent to last
+                    if (range.start <= last.end + 1) {
+                        // Merge by extending the end
+                        last.end = Math.max(last.end, range.end);
+                    } else {
+                        // No overlap, add as new range
+                        merged.push({ start: range.start, end: range.end });
+                    }
+                }
+            }
+            
+            return merged;
+        }
+
+        function countAllFreshIds(ranges) {
+            // Merge overlapping ranges
+            const merged = mergeRanges(ranges);
+            
+            // Count total IDs in merged ranges
+            let totalFresh = 0;
+            for (const range of merged) {
+                totalFresh += range.end - range.start + 1;
+            }
+            
+            return {
+                totalFresh: totalFresh,
+                rangeCount: ranges.length,
+                mergedCount: merged.length
+            };
+        }
+
+        function switchPart(part) {
+            currentPart = part;
+            
+            // Update tabs
+            document.querySelectorAll('.tab').forEach((tab, idx) => {
+                if (idx + 1 === part) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // Update examples
+            document.getElementById('examples1').style.display = part === 1 ? 'block' : 'none';
+            document.getElementById('examples2').style.display = part === 2 ? 'block' : 'none';
+            
+            // Update labels
+            if (part === 1) {
+                document.getElementById('resultLabel').textContent = 'Fresh Ingredients (Part 1)';
+                document.getElementById('stat1Label').textContent = 'Total Available';
+                document.getElementById('stat2Label').textContent = 'Spoiled';
+            } else {
+                document.getElementById('resultLabel').textContent = 'Total Fresh IDs (Part 2)';
+                document.getElementById('stat1Label').textContent = 'Range Count';
+                document.getElementById('stat2Label').textContent = 'Merged Ranges';
+            }
+            
+            // Re-solve with new part
+            solvePuzzle();
+        }
+
+        async function solvePuzzle() {
+            const button = document.querySelector('button');
+            button.disabled = true;
+            button.textContent = '🔄 Checking...';
+
+            const input = await loadInput();
+            
+            if (!input) {
+                button.disabled = false;
+                button.textContent = '🥗 Check Freshness';
+                return;
+            }
+
+            const { ranges, availableIds } = parseInput(input);
+            
+            if (currentPart === 1) {
+                const result = countFreshIngredients(ranges, availableIds);
+                document.getElementById('freshCount').textContent = result.freshCount;
+                document.getElementById('stat1Value').textContent = result.totalAvailable;
+                document.getElementById('stat2Value').textContent = result.spoiledCount;
+            } else {
+                const result = countAllFreshIds(ranges);
+                document.getElementById('freshCount').textContent = result.totalFresh;
+                document.getElementById('stat1Value').textContent = result.rangeCount;
+                document.getElementById('stat2Value').textContent = result.mergedCount;
+            }
+
+            button.disabled = false;
+            button.textContent = '✅ Solved!';
+            setTimeout(() => {
+                button.textContent = '🥗 Check Again';
+            }, 2000);
+        }
+
+        // Auto-solve on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(solvePuzzle, 500);
+        });
+    </script>
+</body>
+</html>
