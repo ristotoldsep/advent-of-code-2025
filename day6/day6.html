@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advent of Code 2025 - Day 6</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #6d28d9;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .octopus-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            gap: 15px;
+        }
+
+        .octopus {
+            font-size: 4em;
+            animation: wave 2s ease-in-out infinite;
+        }
+
+        .octopus:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+
+        .octopus:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+        }
+
+        .result {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .result-label {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .result-value {
+            font-size: 4em;
+            font-weight: bold;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            line-height: 1.2;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f5f7fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #6d28d9;
+            font-size: 1.8em;
+            font-weight: bold;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        button {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .examples {
+            background: #f5f7fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 0.9em;
+        }
+
+        .examples h3 {
+            color: #6d28d9;
+            margin-bottom: 10px;
+        }
+
+        .example-item {
+            margin: 8px 0;
+            color: #666;
+            font-family: 'Courier New', monospace;
+        }
+
+        .highlight {
+            color: #6d28d9;
+            font-weight: bold;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: #f5f7fa;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            color: #666;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗑️ Day 6: Trash Compactor</h1>
+        <p class="subtitle">Cephalopod Math Homework</p>
+
+        <div class="octopus-container">
+            <div class="octopus">🐙</div>
+            <div class="octopus">🧮</div>
+            <div class="octopus">🐙</div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchPart(1)">⭐ Part 1</button>
+            <button class="tab" onclick="switchPart(2)">⭐ Part 2</button>
+        </div>
+
+        <div class="examples" id="examples1">
+            <h3>Part 1 - Normal Reading:</h3>
+            <div class="example-item">Problems arranged in <span class="highlight">columns</span></div>
+            <div class="example-item">Numbers stacked vertically</div>
+            <div class="example-item">Operator at bottom (* or +)</div>
+            <div class="example-item"></div>
+            <div class="example-item">Example: 123, 45, 6, *</div>
+            <div class="example-item">→ 123 * 45 * 6 = <span class="highlight">33210</span></div>
+        </div>
+
+        <div class="examples" id="examples2" style="display: none;">
+            <h3>Part 2 - Cephalopod Right-to-Left:</h3>
+            <div class="example-item">Read <span class="highlight">right-to-left</span> by digit position</div>
+            <div class="example-item">Each number reversed, then columns extracted</div>
+            <div class="example-item"></div>
+            <div class="example-item">Example: 64, 23, 314, +</div>
+            <div class="example-item">Reversed: 46, 32, 413</div>
+            <div class="example-item">Columns: 6,2,3 → 623 | 4,3,1 → 431 | 4 → 4</div>
+            <div class="example-item">→ 4 + 431 + 623 = <span class="highlight">1058</span></div>
+        </div>
+
+        <div class="result">
+            <div class="result-label" id="resultLabel">Grand Total (Part 1)</div>
+            <div class="result-value" id="grandTotal">?</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label" id="stat1Label">Total Problems</div>
+                <div class="stat-value" id="stat1Value">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label" id="stat2Label">Operators Used</div>
+                <div class="stat-value" id="stat2Value">-</div>
+            </div>
+        </div>
+
+        <button onclick="solvePuzzle()">🧮 Calculate Total</button>
+    </div>
+
+    <script>
+        let currentPart = 1;
+
+        async function loadInput() {
+            try {
+                const response = await fetch('day6_input.txt');
+                const text = await response.text();
+                return text.trim().split('\n');
+            } catch (error) {
+                console.error('Error loading input:', error);
+                alert('Error loading input file. Make sure day6_input.txt is in the same folder.');
+                return null;
+            }
+        }
+
+        function parseWorksheet(lines) {
+            // Split each line by whitespace to get columns
+            const rows = lines.map(line => line.trim().split(/\s+/));
+            
+            // The last row contains operators
+            const operatorRow = rows[rows.length - 1];
+            const numberRows = rows.slice(0, -1);
+            
+            // Determine the maximum number of columns
+            const maxCols = Math.max(...rows.map(row => row.length));
+            
+            const problems = [];
+            
+            // For each column position
+            for (let col = 0; col < maxCols; col++) {
+                const operator = operatorRow[col];
+                
+                // Skip if no operator or empty column
+                if (!operator || operator.trim() === '') {
+                    continue;
+                }
+                
+                // Collect all numbers from this column
+                const numbers = [];
+                for (let row = 0; row < numberRows.length; row++) {
+                    const value = numberRows[row][col];
+                    if (value && value.trim() !== '') {
+                        const num = parseInt(value.trim());
+                        if (!isNaN(num)) {
+                            numbers.push(num);
+                        }
+                    }
+                }
+                
+                // Create problem if we have numbers and an operator
+                if (numbers.length > 0 && (operator === '*' || operator === '+')) {
+                    problems.push({ numbers, operator });
+                }
+            }
+            
+            return problems;
+        }
+
+        function parseWorksheetCephalopod(lines) {
+            // Part 2: Work with character positions, not whitespace-separated tokens
+            // Each problem's numbers are in digit columns read right-to-left
+            
+            const numRows = lines.length - 1; // Last row is operators
+            const operatorLine = lines[lines.length - 1];
+            const maxLineLen = Math.max(...lines.map(l => l.length));
+            
+            // Pad all lines to the same length
+            const paddedLines = lines.map(l => l.padEnd(maxLineLen, ' '));
+            
+            // Find problem boundaries by looking at operator positions
+            // Problems are separated by columns that are ALL spaces (including operator row)
+            const problems = [];
+            let inProblem = false;
+            let problemStart = 0;
+            
+            for (let col = 0; col <= maxLineLen; col++) {
+                // Check if this column is a separator (all spaces or end of line)
+                let allSpaces = true;
+                for (let row = 0; row < paddedLines.length; row++) {
+                    const char = col < paddedLines[row].length ? paddedLines[row][col] : ' ';
+                    if (char !== ' ') {
+                        allSpaces = false;
+                        break;
+                    }
+                }
+                
+                if (allSpaces) {
+                    if (inProblem) {
+                        // End of a problem - extract it
+                        const problemEnd = col;
+                        const operator = operatorLine.substring(problemStart, problemEnd).trim();
+                        
+                        if (operator === '*' || operator === '+') {
+                            // Extract digits from each character column, read columns RIGHT to LEFT
+                            const cephalopodNumbers = [];
+                            
+                            for (let c = problemEnd - 1; c >= problemStart; c--) {
+                                let digitStr = '';
+                                for (let row = 0; row < numRows; row++) {
+                                    const char = paddedLines[row][c];
+                                    if (char >= '0' && char <= '9') {
+                                        digitStr += char;
+                                    }
+                                }
+                                if (digitStr.length > 0) {
+                                    cephalopodNumbers.push(parseInt(digitStr));
+                                }
+                            }
+                            
+                            if (cephalopodNumbers.length > 0) {
+                                problems.push({ numbers: cephalopodNumbers, operator });
+                            }
+                        }
+                        inProblem = false;
+                    }
+                } else {
+                    if (!inProblem) {
+                        problemStart = col;
+                        inProblem = true;
+                    }
+                }
+            }
+            
+            return problems;
+        }
+
+        function solveProblem(problem) {
+            const { numbers, operator } = problem;
+            
+            if (operator === '*') {
+                // Multiply all numbers
+                return numbers.reduce((acc, num) => acc * num, 1);
+            } else if (operator === '+') {
+                // Add all numbers
+                return numbers.reduce((acc, num) => acc + num, 0);
+            }
+            
+            return 0;
+        }
+
+        function solveWorksheet(problems) {
+            let grandTotal = 0;
+            let multiplyCount = 0;
+            let addCount = 0;
+            
+            for (const problem of problems) {
+                const result = solveProblem(problem);
+                grandTotal += result;
+                
+                if (problem.operator === '*') {
+                    multiplyCount++;
+                } else if (problem.operator === '+') {
+                    addCount++;
+                }
+            }
+            
+            return {
+                grandTotal,
+                problemCount: problems.length,
+                multiplyCount,
+                addCount
+            };
+        }
+
+        function switchPart(part) {
+            currentPart = part;
+            
+            // Update tabs
+            document.querySelectorAll('.tab').forEach((tab, idx) => {
+                if (idx + 1 === part) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // Update examples
+            document.getElementById('examples1').style.display = part === 1 ? 'block' : 'none';
+            document.getElementById('examples2').style.display = part === 2 ? 'block' : 'none';
+            
+            // Update labels
+            if (part === 1) {
+                document.getElementById('resultLabel').textContent = 'Grand Total (Part 1)';
+                document.getElementById('stat1Label').textContent = 'Total Problems';
+                document.getElementById('stat2Label').textContent = 'Operators Used';
+            } else {
+                document.getElementById('resultLabel').textContent = 'Grand Total (Part 2)';
+                document.getElementById('stat1Label').textContent = 'Total Problems';
+                document.getElementById('stat2Label').textContent = 'Operators Used';
+            }
+            
+            // Re-solve with new part
+            solvePuzzle();
+        }
+
+        async function solvePuzzle() {
+            const button = document.querySelector('button');
+            button.disabled = true;
+            button.textContent = '🔄 Calculating...';
+
+            const lines = await loadInput();
+            
+            if (!lines) {
+                button.disabled = false;
+                button.textContent = '🧮 Calculate Total';
+                return;
+            }
+
+            let problems;
+            if (currentPart === 1) {
+                problems = parseWorksheet(lines);
+            } else {
+                problems = parseWorksheetCephalopod(lines);
+            }
+            
+            const result = solveWorksheet(problems);
+
+            // Display the result
+            document.getElementById('grandTotal').textContent = result.grandTotal;
+            document.getElementById('stat1Value').textContent = result.problemCount;
+            document.getElementById('stat2Value').textContent = 
+                `${result.multiplyCount}× ${result.addCount}+`;
+
+            button.disabled = false;
+            button.textContent = '✅ Solved!';
+            setTimeout(() => {
+                button.textContent = '🧮 Calculate Again';
+            }, 2000);
+        }
+
+        // Auto-solve on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(solvePuzzle, 500);
+        });
+    </script>
+</body>
+</html>
