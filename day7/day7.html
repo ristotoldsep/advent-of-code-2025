@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Advent of Code 2025 - Day 7: Laboratories</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(120deg, #232526 0%, #414345 100%);
+            color: #f3f3f3;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: #23272e;
+            border-radius: 16px;
+            box-shadow: 0 4px 32px #0008;
+            padding: 32px 24px 24px 24px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.2em;
+            margin-bottom: 0.2em;
+        }
+
+        .desc {
+            text-align: center;
+            color: #b0b8c1;
+            margin-bottom: 2em;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 180px;
+            font-family: 'Fira Mono', 'Consolas', monospace;
+            font-size: 1em;
+            background: #181a1b;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 1em;
+            resize: vertical;
+        }
+
+        button {
+            background: linear-gradient(90deg, #4e54c8 0%, #8f94fb 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 32px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 1.5em;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        button:hover {
+            background: linear-gradient(90deg, #8f94fb 0%, #4e54c8 100%);
+        }
+
+        .result {
+            text-align: center;
+            font-size: 1.3em;
+            margin-bottom: 1.5em;
+            color: #aeea00;
+        }
+
+        .grid {
+            overflow-x: auto;
+            background: #181a1b;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Fira Mono', 'Consolas', monospace;
+            font-size: 0.95em;
+            line-height: 1.1em;
+            margin-bottom: 1em;
+            white-space: pre;
+            box-shadow: 0 2px 8px #0004;
+        }
+
+        .legend {
+            text-align: center;
+            color: #b0b8c1;
+            font-size: 0.98em;
+            margin-bottom: 1em;
+        }
+
+        .footer {
+            text-align: center;
+            color: #888;
+            margin-top: 2em;
+            font-size: 0.95em;
+        }
+
+        .splitter {
+            color: #ffb300;
+            font-weight: bold;
+        }
+
+        .beam {
+            color: #00e5ff;
+            font-weight: bold;
+        }
+
+        .start {
+            color: #76ff03;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Advent of Code 2025 – Day 7: Laboratories</h1>
+        <div class="desc">
+            Paste your tachyon manifold input below and use the tabs to solve Part 1 or Part 2.<br>
+            Part 1: Count beam splits. Part 2: Count quantum timelines.
+        </div>
+        <textarea id="input" spellcheck="false"></textarea>
+        <div class="tabs">
+            <button class="tab active" id="tab1">Part 1: Beam Splits</button>
+            <button class="tab" id="tab2">Part 2: Quantum Timelines</button>
+        </div>
+        <div id="part1" class="tabcontent">
+            <button id="simulate1">Simulate Part 1</button>
+            <div class="result" id="result1"></div>
+            <div class="legend">
+                <span class="start">S</span>: Start &nbsp;|&nbsp;
+                <span class="splitter">^</span>: Splitter &nbsp;|&nbsp;
+                <span class="beam">|</span>: Beam
+            </div>
+            <div class="grid" id="grid1"></div>
+        </div>
+        <div id="part2" class="tabcontent" style="display:none">
+            <button id="simulate2">Simulate Part 2</button>
+            <div class="result" id="result2"></div>
+            <div class="legend">
+                <span class="start">S</span>: Start &nbsp;|&nbsp;
+                <span class="splitter">^</span>: Splitter
+            </div>
+            <div class="grid" id="grid2"></div>
+        </div>
+        <div class="footer">Made for Advent of Code 2025 – Day 7</div>
+    </div>
+    <script>
+        // --- Beam Simulation Algorithm (Part 1) ---
+        function simulateManifold(input) {
+            const grid = input.trim().split(/\r?\n/).map(row => row.split(''));
+            const rows = grid.length, cols = grid[0].length;
+            let startCol = grid[0].indexOf('S');
+            if (startCol === -1) throw new Error('No S found in first row!');
+
+            // Each beam: {row, col}
+            let beams = [{ row: 0, col: startCol }];
+            let splits = 0;
+            // For visualization: mark beam paths
+            const vis = grid.map(row => row.slice());
+
+            // To avoid infinite loops, keep track of visited (row, col)
+            let visited = new Set();
+
+            while (beams.length) {
+                const { row, col } = beams.shift();
+                let r = row + 1, c = col;
+                let active = true;
+                while (r < rows && active) {
+                    const key = `${r},${c}`;
+                    if (visited.has(key)) break;
+                    visited.add(key);
+                    if (vis[r][c] === '.') vis[r][c] = '|';
+                    if (vis[r][c] === '^') {
+                        splits++;
+                        // Split left
+                        if (c > 0) beams.push({ row: r, col: c - 1 });
+                        // Split right
+                        if (c < cols - 1) beams.push({ row: r, col: c + 1 });
+                        active = false;
+                    }
+                    r++;
+                }
+            }
+            return { splits, vis };
+        }
+
+        // --- Quantum Timeline Counter (Part 2) ---
+        function countTimelines(input) {
+            const grid = input.trim().split(/\r?\n/).map(row => row.split(''));
+            const rows = grid.length, cols = grid[0].length;
+            let startCol = grid[0].indexOf('S');
+            if (startCol === -1) throw new Error('No S found in first row!');
+
+            // Memoization: (row, col) => timelines
+            const memo = new Map();
+
+            function dfs(row, col) {
+                if (row >= rows || col < 0 || col >= cols) return 1; // exited grid: 1 timeline
+                const key = row + ',' + col;
+                if (memo.has(key)) return memo.get(key);
+                if (grid[row][col] === '^') {
+                    // Split: left and right
+                    let left = dfs(row, col - 1);
+                    let right = dfs(row, col + 1);
+                    let total = left + right;
+                    memo.set(key, total);
+                    return total;
+                } else {
+                    // Continue downward
+                    let total = dfs(row + 1, col);
+                    memo.set(key, total);
+                    return total;
+                }
+            }
+            return dfs(1, startCol); // Start just below S
+        }
+
+        // --- UI Logic ---
+        const inputEl = document.getElementById('input');
+        // Autofill input if available
+        fetch('day7_input.txt').then(r => r.text()).then(txt => {
+            if (!inputEl.value.trim()) inputEl.value = txt.trim();
+        });
+
+        // Tab logic
+        const tab1 = document.getElementById('tab1');
+        const tab2 = document.getElementById('tab2');
+        const part1 = document.getElementById('part1');
+        const part2 = document.getElementById('part2');
+        tab1.onclick = () => {
+            tab1.classList.add('active');
+            tab2.classList.remove('active');
+            part1.style.display = '';
+            part2.style.display = 'none';
+        };
+        tab2.onclick = () => {
+            tab2.classList.add('active');
+            tab1.classList.remove('active');
+            part2.style.display = '';
+            part1.style.display = 'none';
+        };
+
+        // Part 1 logic
+        document.getElementById('simulate1').onclick = () => {
+            const input = inputEl.value;
+            const resultEl = document.getElementById('result1');
+            const gridEl = document.getElementById('grid1');
+            if (!input.trim()) {
+                resultEl.textContent = 'Please paste your input.';
+                gridEl.textContent = '';
+                return;
+            }
+            try {
+                const { splits, vis } = simulateManifold(input);
+                resultEl.innerHTML = `Beam was split <b>${splits}</b> times.`;
+                // Render grid with color
+                gridEl.innerHTML = vis.map(row =>
+                    row.map(cell => {
+                        if (cell === '^') return '<span class="splitter">^</span>';
+                        if (cell === '|') return '<span class="beam">|</span>';
+                        if (cell === 'S') return '<span class="start">S</span>';
+                        return cell;
+                    }).join('')
+                ).join('\n');
+            } catch (e) {
+                resultEl.textContent = 'Error: ' + e.message;
+                gridEl.textContent = '';
+            }
+        };
+
+        // Part 2 logic
+        document.getElementById('simulate2').onclick = () => {
+            const input = inputEl.value;
+            const resultEl = document.getElementById('result2');
+            const gridEl = document.getElementById('grid2');
+            if (!input.trim()) {
+                resultEl.textContent = 'Please paste your input.';
+                gridEl.textContent = '';
+                return;
+            }
+            try {
+                const timelines = countTimelines(input);
+                resultEl.innerHTML = `Total quantum timelines: <b>${timelines}</b>`;
+                // For part 2, just show the grid (no beam path)
+                const grid = input.trim().split(/\r?\n/).map(row => row.split(''));
+                gridEl.innerHTML = grid.map(row =>
+                    row.map(cell => {
+                        if (cell === '^') return '<span class="splitter">^</span>';
+                        if (cell === 'S') return '<span class="start">S</span>';
+                        return cell;
+                    }).join('')
+                ).join('\n');
+            } catch (e) {
+                resultEl.textContent = 'Error: ' + e.message;
+                gridEl.textContent = '';
+            }
+        };
+    </script>
+</body>
+
+</html>

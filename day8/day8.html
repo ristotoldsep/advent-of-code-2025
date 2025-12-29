@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Advent of Code 2025 - Day 8: Playground</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(120deg, #232526 0%, #414345 100%);
+            color: #f3f3f3;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: #23272e;
+            border-radius: 16px;
+            box-shadow: 0 4px 32px #0008;
+            padding: 32px 24px 24px 24px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.2em;
+            margin-bottom: 0.2em;
+        }
+
+        .desc {
+            text-align: center;
+            color: #b0b8c1;
+            margin-bottom: 2em;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 180px;
+            font-family: 'Fira Mono', 'Consolas', monospace;
+            font-size: 1em;
+            background: #181a1b;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 1em;
+            resize: vertical;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5em;
+        }
+
+        .tab {
+            background: #23272e;
+            color: #fff;
+            border: none;
+            border-bottom: 3px solid transparent;
+            padding: 10px 32px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: border 0.2s, color 0.2s;
+            border-radius: 8px 8px 0 0;
+            margin: 0 2px;
+        }
+
+        .tab.active {
+            border-bottom: 3px solid #aeea00;
+            color: #aeea00;
+            background: #181a1b;
+        }
+
+        .tabcontent {
+            display: none;
+        }
+
+        .tabcontent.active {
+            display: block;
+        }
+
+        button.action {
+            background: linear-gradient(90deg, #4e54c8 0%, #8f94fb 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 32px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 1.5em;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        button.action:hover {
+            background: linear-gradient(90deg, #8f94fb 0%, #4e54c8 100%);
+        }
+
+        .result {
+            text-align: center;
+            font-size: 1.3em;
+            margin-bottom: 1.5em;
+            color: #aeea00;
+        }
+
+        .footer {
+            text-align: center;
+            color: #888;
+            margin-top: 2em;
+            font-size: 0.95em;
+        }
+
+        .circuit-list {
+            text-align: center;
+            color: #b0b8c1;
+            margin-bottom: 1em;
+            font-size: 1.05em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Advent of Code 2025 – Day 8: Playground</h1>
+        <div class="desc">
+            Paste your junction box coordinates below and use the tab to solve.<br>
+            The result will show the product of the three largest circuits after 1000 connections.
+        </div>
+        <textarea id="input" spellcheck="false"></textarea>
+        <div class="tabs">
+            <button class="tab active" id="tab1">Part 1: Circuits</button>
+            <button class="tab" id="tab2">Part 2: Last Merge</button>
+        </div>
+        <div id="part1" class="tabcontent active">
+            <button class="action" id="simulate1">Simulate</button>
+            <div class="result" id="result1"></div>
+            <div class="circuit-list" id="circuitList"></div>
+        </div>
+        <div id="part2" class="tabcontent">
+            <button class="action" id="simulate2">Simulate</button>
+            <div class="result" id="result2"></div>
+            <div class="circuit-list" id="circuitList2"></div>
+        </div>
+        <div class="footer">Made for Advent of Code 2025 – Day 8</div>
+    </div>
+    <script>
+        // --- Parse Input ---
+        function parseInput(input) {
+            return input.trim().split(/\r?\n/).map(line => line.split(',').map(Number));
+        }
+
+        // --- Euclidean Distance ---
+        function dist(a, b) {
+            return Math.sqrt(
+                (a[0] - b[0]) ** 2 +
+                (a[1] - b[1]) ** 2 +
+                (a[2] - b[2]) ** 2
+            );
+        }
+
+        // --- Union-Find (Disjoint Set) ---
+        class UnionFind {
+            constructor(n) {
+                this.parent = Array.from({ length: n }, (_, i) => i);
+                this.size = Array(n).fill(1);
+            }
+            find(x) {
+                if (this.parent[x] !== x) this.parent[x] = this.find(this.parent[x]);
+                return this.parent[x];
+            }
+            union(x, y) {
+                let xr = this.find(x), yr = this.find(y);
+                if (xr === yr) return false;
+                if (this.size[xr] < this.size[yr]) [xr, yr] = [yr, xr];
+                this.parent[yr] = xr;
+                this.size[xr] += this.size[yr];
+                return true;
+            }
+            getSizes() {
+                // Recompute sizes by counting the number of nodes per root
+                const rootCount = {};
+                for (let i = 0; i < this.parent.length; ++i) {
+                    let r = this.find(i);
+                    rootCount[r] = (rootCount[r] || 0) + 1;
+                }
+                return Object.values(rootCount);
+            }
+        }
+
+        // --- Main Simulation Part 1 ---
+        function simulate(input, numPairs = 1000) {
+            const points = parseInput(input);
+            const n = points.length;
+            // Build all pairs with distances
+            let pairs = [];
+            for (let i = 0; i < n; ++i) {
+                for (let j = i + 1; j < n; ++j) {
+                    pairs.push({ i, j, d: dist(points[i], points[j]) });
+                }
+            }
+            pairs.sort((a, b) => a.d - b.d);
+            const uf = new UnionFind(n);
+            // Process exactly the 1000 shortest pairs
+            for (let idx = 0; idx < numPairs && idx < pairs.length; ++idx) {
+                const { i, j } = pairs[idx];
+                uf.union(i, j);
+            }
+            const sizes = uf.getSizes().sort((a, b) => b - a);
+            const product = sizes.slice(0, 3).reduce((a, b) => a * b, 1);
+            return { sizes, product };
+        }
+
+        // --- Main Simulation Part 2 ---
+        function simulateUntilAllConnected(input) {
+            const points = parseInput(input);
+            const n = points.length;
+            let pairs = [];
+            for (let i = 0; i < n; ++i) {
+                for (let j = i + 1; j < n; ++j) {
+                    pairs.push({ i, j, d: dist(points[i], points[j]) });
+                }
+            }
+            pairs.sort((a, b) => a.d - b.d);
+            const uf = new UnionFind(n);
+            let numCircuits = n;
+            let lastPair = null;
+            for (let idx = 0; idx < pairs.length; ++idx) {
+                const { i, j } = pairs[idx];
+                if (uf.union(i, j)) {
+                    numCircuits--;
+                    lastPair = { i, j };
+                    if (numCircuits === 1) break;
+                }
+            }
+            if (!lastPair) return null;
+            const x1 = points[lastPair.i][0];
+            const x2 = points[lastPair.j][0];
+            return { x1, x2, product: x1 * x2, pair: lastPair };
+        }
+
+        // --- UI Logic ---
+        const inputEl = document.getElementById('input');
+        // Autofill input if available
+        fetch('day8_input.txt').then(r => r.text()).then(txt => {
+            if (!inputEl.value.trim()) inputEl.value = txt.trim();
+        });
+
+        // Tab logic
+        const tab1 = document.getElementById('tab1');
+        const tab2 = document.getElementById('tab2');
+        const part1 = document.getElementById('part1');
+        const part2 = document.getElementById('part2');
+        function setTab(activeTab, inactiveTab, activeContent, inactiveContent) {
+            activeTab.classList.add('active');
+            inactiveTab.classList.remove('active');
+            activeContent.classList.add('active');
+            inactiveContent.classList.remove('active');
+        }
+        tab1.onclick = () => setTab(tab1, tab2, part1, part2);
+        tab2.onclick = () => setTab(tab2, tab1, part2, part1);
+
+        document.getElementById('simulate1').onclick = () => {
+            const input = inputEl.value;
+            const resultEl = document.getElementById('result1');
+            const circuitList = document.getElementById('circuitList');
+            if (!input.trim()) {
+                resultEl.textContent = 'Please paste your input.';
+                circuitList.textContent = '';
+                return;
+            }
+            try {
+                const { sizes, product } = simulate(input, 1000);
+                resultEl.innerHTML = `Product of three largest circuits: <b>${product}</b>`;
+                circuitList.innerHTML = `Circuit sizes (top 10): <b>${sizes.slice(0, 10).join(', ')}</b>`;
+            } catch (e) {
+                resultEl.textContent = 'Error: ' + e.message;
+                circuitList.textContent = '';
+            }
+        };
+
+        document.getElementById('simulate2').onclick = () => {
+            const input = inputEl.value;
+            const resultEl = document.getElementById('result2');
+            const circuitList = document.getElementById('circuitList2');
+            if (!input.trim()) {
+                resultEl.textContent = 'Please paste your input.';
+                circuitList.textContent = '';
+                return;
+            }
+            try {
+                const res = simulateUntilAllConnected(input);
+                if (!res) {
+                    resultEl.textContent = 'Could not connect all circuits.';
+                    circuitList.textContent = '';
+                    return;
+                }
+                resultEl.innerHTML = `Product of X coordinates: <b>${res.product}</b>`;
+                circuitList.innerHTML = `Last connection: X1 = <b>${res.x1}</b>, X2 = <b>${res.x2}</b>`;
+            } catch (e) {
+                resultEl.textContent = 'Error: ' + e.message;
+                circuitList.textContent = '';
+            }
+        };
+    </script>
+</body>
+
+</html>
