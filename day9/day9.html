@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Advent of Code 2025 – Day 9: Movie Theater Solver</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #020617;
+            --accent: #22c55e;
+            --accent-soft: rgba(34, 197, 94, 0.2);
+            --accent-strong: rgba(34, 197, 94, 0.6);
+            --text-main: #e5e7eb;
+            --text-muted: #9ca3af;
+            --border-subtle: rgba(148, 163, 184, 0.35);
+            --danger: #f97373;
+            --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+                "Segoe UI", sans-serif;
+            --font-mono: ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono",
+                "Courier New", monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: var(--font-sans);
+            background: radial-gradient(circle at top, #1f2937 0, #020617 55%);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 960px;
+            background: radial-gradient(circle at top left, #111827 0, #020617 55%);
+            border-radius: 18px;
+            border: 1px solid var(--border-subtle);
+            box-shadow:
+                0 30px 80px rgba(0, 0, 0, 0.7),
+                0 0 0 1px rgba(15, 23, 42, 0.8);
+            padding: 1.75rem 1.75rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.2), transparent 60%),
+                radial-gradient(circle at 100% 0%, rgba(59, 130, 246, 0.2), transparent 55%);
+            opacity: 0.6;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+
+        .app-inner {
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(1.6rem, 2vw, 1.9rem);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pill {
+            font-size: 0.7rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            border-radius: 999px;
+            padding: 0.25rem 0.7rem;
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            color: var(--text-muted);
+        }
+
+        p.subtitle {
+            margin: 0.5rem 0 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.4fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 800px) {
+            .layout {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 0.4rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 280px;
+            resize: vertical;
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+            background: rgba(15, 23, 42, 0.9);
+            color: var(--text-main);
+            padding: 0.75rem 0.9rem;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            line-height: 1.55;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease,
+                background 0.15s ease;
+        }
+
+        textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px var(--accent-soft);
+            background: #020617;
+        }
+
+        .buttons {
+            margin-top: 0.75rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        button {
+            border-radius: 999px;
+            border: 1px solid transparent;
+            padding: 0.45rem 0.9rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--accent);
+            color: #022c22;
+            box-shadow: 0 14px 30px rgba(34, 197, 94, 0.35);
+            transition: transform 0.08s ease-out, box-shadow 0.08s ease-out,
+                background 0.12s ease-out, border-color 0.12s ease-out;
+            white-space: nowrap;
+        }
+
+        button.secondary {
+            background: transparent;
+            border-color: rgba(148, 163, 184, 0.8);
+            color: var(--text-muted);
+            box-shadow: none;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 18px 40px rgba(34, 197, 94, 0.4);
+        }
+
+        button.secondary:hover {
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.9);
+            border-color: var(--accent-strong);
+            color: #e5e7eb;
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.35);
+        }
+
+        button.secondary:active {
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 1);
+        }
+
+        .btn-icon {
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        .result-shell-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.4rem;
+            gap: 0.75rem;
+        }
+
+        .result-shell-title {
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+        }
+
+        .point-count {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: inline-flex;
+            padding: 0.2rem;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            margin-bottom: 0.75rem;
+            gap: 0.25rem;
+        }
+
+        .tabs .tab {
+            border-radius: 999px;
+            border: none;
+            padding: 0.25rem 0.9rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            background: transparent;
+            color: var(--text-muted);
+            box-shadow: none;
+        }
+
+        .tabs .tab:hover {
+            box-shadow: none;
+            transform: translateY(0);
+            background: rgba(15, 23, 42, 0.9);
+            color: #e5e7eb;
+        }
+
+        .tabs .tab.active {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--accent);
+            border: 1px solid var(--accent-soft);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .result-card {
+            border-radius: 14px;
+            border: 1px solid var(--border-subtle);
+            background: rgba(15, 23, 42, 0.92);
+            padding: 1rem 1.1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
+        }
+
+        .result-header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .result-subtitle {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .area-display {
+            font-size: clamp(1.5rem, 2.4vw, 2rem);
+            font-weight: 700;
+            display: flex;
+            align-items: baseline;
+            gap: 0.3rem;
+        }
+
+        .area-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--accent);
+            padding: 0.1rem 0.45rem;
+            border-radius: 999px;
+            border: 1px solid var(--accent-soft);
+            background: rgba(15, 23, 42, 0.95);
+        }
+
+        .area-value {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .coords-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 0.4rem;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+
+        .coord-line {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.8rem;
+            padding: 0.4rem 0.55rem;
+            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+        }
+
+        .coord-label {
+            opacity: 0.7;
+        }
+
+        .stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .stat-pill {
+            border-radius: 999px;
+            padding: 0.15rem 0.55rem;
+            border: 1px solid rgba(148, 163, 184, 0.45);
+            background: rgba(15, 23, 42, 0.95);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .notes {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            border-top: 1px dashed rgba(148, 163, 184, 0.4);
+            padding-top: 0.6rem;
+            margin-top: 0.4rem;
+        }
+
+        .notes code {
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 0.1rem 0.35rem;
+            border-radius: 6px;
+        }
+
+        .error {
+            margin-top: 0.4rem;
+            color: var(--danger);
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="app">
+        <div class="app-inner">
+            <header>
+                <h1>
+                    Day 9: Movie Theater
+                    <span class="pill">Rectangle Solver</span>
+                </h1>
+                <p class="subtitle">
+                    Paste your list of red tile coordinates (<code>x,y</code> per line).
+                    The solver finds the largest rectangle with red corners for:
+                    <strong>Part 1</strong> (any tiles allowed inside) and
+                    <strong>Part 2</strong> (only red + green tiles inside).
+                </p>
+            </header>
+
+            <section class="layout">
+                <div>
+                    <label for="input-text">Puzzle input (red tile coordinates)</label>
+                    <textarea id="input-text" spellcheck="false" placeholder="Example:
+7,1
+11,1
+11,7
+9,7
+9,5
+2,5
+2,3
+7,3"></textarea>
+
+                    <div class="buttons">
+                        <button id="solve-btn" type="button">
+                            <span class="btn-icon">▶️</span>
+                            Solve
+                        </button>
+                        <button id="load-example-btn" type="button" class="secondary">
+                            <span class="btn-icon">📥</span>
+                            Load example
+                        </button>
+                    </div>
+
+                    <div id="error-box" class="error hidden"></div>
+                </div>
+
+                <aside>
+                    <div class="result-shell-header">
+                        <div class="result-shell-title">Results</div>
+                        <div class="point-count" id="point-count">No input yet</div>
+                    </div>
+
+                    <div class="tabs">
+                        <button class="tab active" data-tab="part1">Part 1</button>
+                        <button class="tab" data-tab="part2">Part 2</button>
+                    </div>
+
+                    <div id="tab-panels">
+                        <!-- Part 1 -->
+                        <div class="tab-panel active" data-tab-panel="part1">
+                            <div class="result-card">
+                                <div class="result-header">
+                                    <div class="area-display">
+                                        <span class="area-label">Max Area</span>
+                                        <span class="area-value" id="part1-area-value">–</span>
+                                    </div>
+                                    <div class="result-subtitle">
+                                        Any tiles are allowed inside the rectangle; only the two
+                                        opposite corners must be red.
+                                    </div>
+                                </div>
+
+                                <div class="coords-grid">
+                                    <div class="coord-line">
+                                        <span class="coord-label">Corner A</span>
+                                        <span id="part1-corner-a">(–, –)</span>
+                                    </div>
+                                    <div class="coord-line">
+                                        <span class="coord-label">Corner B</span>
+                                        <span id="part1-corner-b">(–, –)</span>
+                                    </div>
+                                </div>
+
+                                <div class="stats">
+                                    <span class="stat-pill" id="part1-width-stat">Width: –</span>
+                                    <span class="stat-pill" id="part1-height-stat">Height: –</span>
+                                    <span class="stat-pill" id="part1-pairs-stat">Pairs checked: –</span>
+                                </div>
+
+                                <div class="notes">
+                                    Area is <code>(|x1 - x2| + 1) × (|y1 - y2| + 1)</code>,
+                                    because both corner tiles are included.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Part 2 -->
+                        <div class="tab-panel" data-tab-panel="part2">
+                            <div class="result-card">
+                                <div class="result-header">
+                                    <div class="area-display">
+                                        <span class="area-label">Max Area</span>
+                                        <span class="area-value" id="part2-area-value">–</span>
+                                    </div>
+                                    <div class="result-subtitle">
+                                        Rectangle corners are red; every tile inside must be red or
+                                        green (inside or on the red+green loop formed by the path).
+                                    </div>
+                                </div>
+
+                                <div class="coords-grid">
+                                    <div class="coord-line">
+                                        <span class="coord-label">Corner A</span>
+                                        <span id="part2-corner-a">(–, –)</span>
+                                    </div>
+                                    <div class="coord-line">
+                                        <span class="coord-label">Corner B</span>
+                                        <span id="part2-corner-b">(–, –)</span>
+                                    </div>
+                                </div>
+
+                                <div class="stats">
+                                    <span class="stat-pill" id="part2-width-stat">Width: –</span>
+                                    <span class="stat-pill" id="part2-height-stat">Height: –</span>
+                                    <span class="stat-pill" id="part2-pairs-stat">Pairs: –</span>
+                                    <span class="stat-pill" id="part2-validated-stat">Rectangles checked: –</span>
+                                </div>
+
+                                <div class="notes">
+                                    The input red tiles form the border of a closed orthogonal loop.
+                                    For each pair of red tiles, we form a rectangle and discard it
+                                    if any border edge cuts through the rectangle interior.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const inputEl = document.getElementById("input-text");
+        const errorBox = document.getElementById("error-box");
+        const pointCountEl = document.getElementById("point-count");
+
+        // Part 1 elements
+        const part1AreaEl = document.getElementById("part1-area-value");
+        const part1CornerAEl = document.getElementById("part1-corner-a");
+        const part1CornerBEl = document.getElementById("part1-corner-b");
+        const part1WidthEl = document.getElementById("part1-width-stat");
+        const part1HeightEl = document.getElementById("part1-height-stat");
+        const part1PairsEl = document.getElementById("part1-pairs-stat");
+
+        // Part 2 elements
+        const part2AreaEl = document.getElementById("part2-area-value");
+        const part2CornerAEl = document.getElementById("part2-corner-a");
+        const part2CornerBEl = document.getElementById("part2-corner-b");
+        const part2WidthEl = document.getElementById("part2-width-stat");
+        const part2HeightEl = document.getElementById("part2-height-stat");
+        const part2PairsEl = document.getElementById("part2-pairs-stat");
+        const part2ValidatedEl = document.getElementById("part2-validated-stat");
+
+        // Tab elements
+        const tabButtons = document.querySelectorAll(".tabs .tab");
+        const tabPanels = document.querySelectorAll(".tab-panel");
+
+        const solveBtn = document.getElementById("solve-btn");
+        const loadExampleBtn = document.getElementById("load-example-btn");
+
+        const exampleInput = `7,1
+11,1
+11,7
+9,7
+9,5
+2,5
+2,3
+7,3`;
+
+        function setActiveTab(name) {
+            tabButtons.forEach((btn) => {
+                btn.classList.toggle("active", btn.dataset.tab === name);
+            });
+            tabPanels.forEach((panel) => {
+                panel.classList.toggle("active", panel.dataset.tabPanel === name);
+            });
+        }
+
+        tabButtons.forEach((btn) => {
+            btn.addEventListener("click", () => {
+                setActiveTab(btn.dataset.tab);
+            });
+        });
+
+        function parseInput(text) {
+            const lines = text.split(/\r?\n/);
+            const points = [];
+            const errors = [];
+
+            lines.forEach((line, index) => {
+                const trimmed = line.trim();
+                if (!trimmed) return; // skip empty
+
+                const match = trimmed.match(/^(-?\d+)\s*,\s*(-?\d+)$/);
+                if (!match) {
+                    errors.push(`Line ${index + 1}: "${line}" is not in "x,y" format.`);
+                    return;
+                }
+
+                const x = Number(match[1]);
+                const y = Number(match[2]);
+
+                if (!Number.isFinite(x) || !Number.isFinite(y)) {
+                    errors.push(`Line ${index + 1}: "${line}" contains invalid numbers.`);
+                    return;
+                }
+
+                points.push({ x, y });
+            });
+
+            return { points, errors };
+        }
+
+        function computePart1(points) {
+            const n = points.length;
+            if (n < 2) {
+                return {
+                    maxArea: 0,
+                    cornerA: null,
+                    cornerB: null,
+                    width: 0,
+                    height: 0,
+                    pairsChecked: 0,
+                };
+            }
+
+            let maxArea = 0;
+            let cornerA = null;
+            let cornerB = null;
+            let bestWidth = 0;
+            let bestHeight = 0;
+
+            let pairsChecked = 0;
+            for (let i = 0; i < n; i++) {
+                const { x: x1, y: y1 } = points[i];
+                for (let j = i + 1; j < n; j++) {
+                    const { x: x2, y: y2 } = points[j];
+                    const width = Math.abs(x1 - x2) + 1;
+                    const height = Math.abs(y1 - y2) + 1;
+                    const area = width * height;
+
+                    pairsChecked++;
+
+                    if (area > maxArea) {
+                        maxArea = area;
+                        cornerA = points[i];
+                        cornerB = points[j];
+                        bestWidth = width;
+                        bestHeight = height;
+                    }
+                }
+            }
+
+            return {
+                maxArea,
+                cornerA,
+                cornerB,
+                width: bestWidth,
+                height: bestHeight,
+                pairsChecked,
+            };
+        }
+
+        function buildEdges(points) {
+            const edges = [];
+            const n = points.length;
+            for (let i = 0; i < n; i++) {
+                const a = points[i];
+                const b = points[(i + 1) % n];
+                edges.push({ x1: a.x, y1: a.y, x2: b.x, y2: b.y });
+            }
+            return edges;
+        }
+
+        // Check if a single polygon edge crosses the interior of the rectangle
+        function edgeCrossesRectangle(edge, r1, r2) {
+            const { x1: ex1, y1: ey1, x2: ex2, y2: ey2 } = edge;
+            const { x: rx1, y: ry1 } = r1;
+            const { x: rx2, y: ry2 } = r2;
+
+            if (ex1 === ex2) {
+                // Vertical edge
+                const x = ex1;
+                const eyMin = Math.min(ey1, ey2);
+                const eyMax = Math.max(ey1, ey2);
+                const ryMin = Math.min(ry1, ry2);
+                const ryMax = Math.max(ry1, ry2);
+
+                const between =
+                    x > Math.min(rx1, rx2) && x < Math.max(rx1, rx2);
+
+                const overlap =
+                    eyMin <= ryMin ? eyMax > ryMin : ryMax > eyMin;
+
+                return between && overlap;
+            } else {
+                // Horizontal edge
+                const y = ey1;
+                const exMin = Math.min(ex1, ex2);
+                const exMax = Math.max(ex1, ex2);
+                const rxMin = Math.min(rx1, rx2);
+                const rxMax = Math.max(rx1, rx2);
+
+                const between =
+                    y > Math.min(ry1, ry2) && y < Math.max(ry1, ry2);
+
+                const overlap =
+                    exMin <= rxMin ? exMax > rxMin : rxMax > exMin;
+
+                return between && overlap;
+            }
+        }
+
+        function rectangleValid(r1, r2, edges) {
+            for (let i = 0; i < edges.length; i++) {
+                if (edgeCrossesRectangle(edges[i], r1, r2)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function computePart2(points) {
+            const n = points.length;
+            if (n < 2) {
+                return {
+                    maxArea: 0,
+                    cornerA: null,
+                    cornerB: null,
+                    width: 0,
+                    height: 0,
+                    pairsGenerated: 0,
+                    rectanglesValidated: 0,
+                };
+            }
+
+            const edges = buildEdges(points);
+            const pairs = [];
+
+            for (let i = 0; i < n; i++) {
+                const { x: x1, y: y1 } = points[i];
+                for (let j = i + 1; j < n; j++) {
+                    const { x: x2, y: y2 } = points[j];
+                    const width = Math.abs(x1 - x2) + 1;
+                    const height = Math.abs(y1 - y2) + 1;
+                    const area = width * height;
+                    pairs.push({ i, j, width, height, area });
+                }
+            }
+
+            // Largest areas first – lets us stop early once we can't beat bestArea.
+            pairs.sort((a, b) => b.area - a.area);
+
+            let bestArea = 0;
+            let bestInfo = null;
+            let rectanglesValidated = 0;
+
+            for (let k = 0; k < pairs.length; k++) {
+                const pair = pairs[k];
+                if (pair.area <= bestArea) {
+                    break;
+                }
+
+                const p1 = points[pair.i];
+                const p2 = points[pair.j];
+
+                rectanglesValidated++;
+                if (rectangleValid(p1, p2, edges)) {
+                    bestArea = pair.area;
+                    bestInfo = {
+                        cornerA: p1,
+                        cornerB: p2,
+                        width: pair.width,
+                        height: pair.height,
+                    };
+                }
+            }
+
+            return {
+                maxArea: bestArea,
+                cornerA: bestInfo ? bestInfo.cornerA : null,
+                cornerB: bestInfo ? bestInfo.cornerB : null,
+                width: bestInfo ? bestInfo.width : 0,
+                height: bestInfo ? bestInfo.height : 0,
+                pairsGenerated: pairs.length,
+                rectanglesValidated,
+            };
+        }
+
+        function formatNumber(num) {
+            return num.toLocaleString("en-US");
+        }
+
+        function showError(message) {
+            if (!message) {
+                errorBox.classList.add("hidden");
+                errorBox.textContent = "";
+                return;
+            }
+            errorBox.classList.remove("hidden");
+            errorBox.textContent = message;
+        }
+
+        function updateShared(pointCount) {
+            pointCountEl.textContent =
+                pointCount === 0
+                    ? "No valid points"
+                    : `${pointCount} red tiles loaded`;
+        }
+
+        function updatePart1UI(result) {
+            if (result.maxArea === 0 || !result.cornerA || !result.cornerB) {
+                part1AreaEl.textContent = "0";
+                part1CornerAEl.textContent = "(–, –)";
+                part1CornerBEl.textContent = "(–, –)";
+                part1WidthEl.textContent = "Width: –";
+                part1HeightEl.textContent = "Height: –";
+                part1PairsEl.textContent =
+                    "Pairs checked: " + formatNumber(result.pairsChecked || 0);
+                return;
+            }
+
+            part1AreaEl.textContent = formatNumber(result.maxArea);
+            part1CornerAEl.textContent =
+                `(${result.cornerA.x}, ${result.cornerA.y})`;
+            part1CornerBEl.textContent =
+                `(${result.cornerB.x}, ${result.cornerB.y})`;
+
+            part1WidthEl.textContent =
+                "Width: " + formatNumber(result.width);
+            part1HeightEl.textContent =
+                "Height: " + formatNumber(result.height);
+            part1PairsEl.textContent =
+                "Pairs checked: " + formatNumber(result.pairsChecked);
+        }
+
+        function updatePart2UI(result) {
+            if (result.maxArea === 0 || !result.cornerA || !result.cornerB) {
+                part2AreaEl.textContent = "0";
+                part2CornerAEl.textContent = "(–, –)";
+                part2CornerBEl.textContent = "(–, –)";
+                part2WidthEl.textContent = "Width: –";
+                part2HeightEl.textContent = "Height: –";
+                part2PairsEl.textContent =
+                    "Pairs: " + formatNumber(result.pairsGenerated || 0);
+                part2ValidatedEl.textContent =
+                    "Rectangles checked: " + formatNumber(result.rectanglesValidated || 0);
+                return;
+            }
+
+            part2AreaEl.textContent = formatNumber(result.maxArea);
+            part2CornerAEl.textContent =
+                `(${result.cornerA.x}, ${result.cornerA.y})`;
+            part2CornerBEl.textContent =
+                `(${result.cornerB.x}, ${result.cornerB.y})`;
+
+            part2WidthEl.textContent =
+                "Width: " + formatNumber(result.width);
+            part2HeightEl.textContent =
+                "Height: " + formatNumber(result.height);
+            part2PairsEl.textContent =
+                "Pairs: " + formatNumber(result.pairsGenerated);
+            part2ValidatedEl.textContent =
+                "Rectangles checked: " + formatNumber(result.rectanglesValidated);
+        }
+
+        function handleSolve() {
+            const raw = inputEl.value;
+            const { points, errors } = parseInput(raw);
+
+            if (errors.length > 0) {
+                showError(errors.join("\n"));
+            } else {
+                showError("");
+            }
+
+            updateShared(points.length);
+
+            const part1Result = computePart1(points);
+            const part2Result = computePart2(points);
+
+            updatePart1UI(part1Result);
+            updatePart2UI(part2Result);
+        }
+
+        solveBtn.addEventListener("click", handleSolve);
+
+        loadExampleBtn.addEventListener("click", () => {
+            inputEl.value = exampleInput;
+            handleSolve();
+            setActiveTab("part1");
+        });
+
+        // Optional: Ctrl+Enter / Cmd+Enter to run
+        inputEl.addEventListener("keydown", (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                e.preventDefault();
+                handleSolve();
+            }
+        });
+    </script>
+</body>
+
+</html>
